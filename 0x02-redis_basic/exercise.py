@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-'''A module for using the Redis NoSQL data storage.
+'''
+A module for using the Redis NoSQL data storage.
 '''
 import redis
 from uuid import uuid4
@@ -8,11 +9,15 @@ from typing import Any, Callable, Optional, Union
 
 
 def count_calls(method: Callable) -> Callable:
-    """ Decorator for Cache class methods to track call count
+    """ 
+    Decorator for Cache class methods to track call count
+    
     """
     @wraps(method)
     def wrapper(self: Any, *args, **kwargs) -> str:
-        """ Wraps called method and adds its call count redis before execution
+        """
+          Wraps called method and adds its call count redis before execution
+        
         """
         self._redis.incr(method.__qualname__)
         return method(self, *args, **kwargs)
@@ -20,12 +25,16 @@ def count_calls(method: Callable) -> Callable:
 
 
 def call_history(method: Callable) -> Callable:
-    """ Decorator for Cache class method to track args
+    """ 
+    Decorator for Cache class method to track args
+    
     """
     @wraps(method)
     def wrapper(self: Any, *args) -> str:
-        """ Wraps called method and tracks its passed argument by storing
+        """
+          Wraps called method and tracks its passed argument by storing
             them to redis
+        
         """
         self._redis.rpush(f'{method.__qualname__}:inputs', str(args))
         output = method(self, *args)
@@ -35,9 +44,9 @@ def call_history(method: Callable) -> Callable:
 
 
 def replay(fn: Callable) -> None:
-    """ Check redis for how many times a function was called and display:
-            - How many times it was called
-            - Function args and output for each call
+    """ 
+    Check redis for how many times a function was called and display:
+    
     """
     client = redis.Redis()
     calls = client.get(fn.__qualname__).decode('utf-8')
@@ -51,10 +60,14 @@ def replay(fn: Callable) -> None:
 
 
 class Cache:
-    """ Caching class
+    """ 
+    Caching class
+    
     """
     def __init__(self) -> None:
-        """ Initialize new cache object
+        """ 
+        Initialize new cache object
+        
         """
         self._redis = redis.Redis()
         self._redis.flushdb()
@@ -62,7 +75,9 @@ class Cache:
     @call_history
     @count_calls
     def store(self, data: Union[str, bytes,  int,  float]) -> str:
-        """ Stores data in redis with randomly generated key
+        """ 
+        Stores data in redis with randomly generated key
+        
         """
         key = str(uuid4())
         client = self._redis
@@ -70,8 +85,10 @@ class Cache:
         return key
 
     def get(self, key: str, fn: Optional[Callable] = None) -> Any:
-        """ Gets key's value from redis and converts
+        """ 
+        Gets key's value from redis and converts
             result byte  into correct data type
+        
         """
         client = self._redis
         value = client.get(key)
@@ -86,11 +103,15 @@ class Cache:
         return value
 
     def get_str(self, data: bytes) -> str:
-        """ Converts bytes to string
+        """ 
+        Converts bytes to string
+        
         """
         return data.decode('utf-8')
 
     def get_int(self, data: bytes) -> int:
-        """ Converts bytes to integers
+        """
+          Converts bytes to integers
+        
         """
         return int(data)
